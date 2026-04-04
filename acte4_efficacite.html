@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Actes 2 et 4 - D3</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    :root {
+      --bg: #f5efe6;
+      --panel: rgba(255, 255, 255, 0.86);
+      --panel-strong: #fffdf8;
+      --text: #1f2430;
+      --muted: #677186;
+      --grid: #d9d2c6;
+      --shadow: 0 18px 45px rgba(62, 50, 34, 0.14);
+      --accent: #d97706;
+      --accent-soft: #fff0d6;
+      --good: #2f9e44;
+      --bad: #d64545;
+      --stem: #8f99a8;
+      --rail: #ece5da;
+      --focus: #183153;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "Aptos", "Segoe UI", "Trebuchet MS", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(217, 119, 6, 0.16), transparent 28%),
+        radial-gradient(circle at 85% 15%, rgba(47, 158, 68, 0.14), transparent 24%),
+        linear-gradient(145deg, #f8f2e8 0%, #efe7db 50%, #f8f6f2 100%);
+    }
+
+    .page {
+      width: min(1240px, calc(100vw - 32px));
+      margin: 24px auto 32px;
+    }
+
+    .hero {
+      padding: 28px 28px 18px;
+      border-radius: 28px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 250, 242, 0.84));
+      backdrop-filter: blur(8px);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(98, 75, 42, 0.1);
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    h1 {
+      margin: 0;
+      font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+      font-size: clamp(2rem, 4vw, 3.7rem);
+      line-height: 1.02;
+      letter-spacing: -0.03em;
+    }
+
+    .subtitle {
+      margin: 12px 0 0;
+      max-width: 74ch;
+      font-size: 1.02rem;
+      line-height: 1.55;
+      color: var(--muted);
+    }
+
+    .panel {
+      margin-top: 16px;
+      padding: 18px;
+      border-radius: 24px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(98, 75, 42, 0.08);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .tabs {
+      display: inline-flex;
+      gap: 8px;
+      padding: 6px;
+      border-radius: 999px;
+      background: rgba(255, 250, 241, 0.88);
+      border: 1px solid rgba(98, 75, 42, 0.08);
+    }
+
+    .tab {
+      appearance: none;
+      border: 0;
+      padding: 11px 16px;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 160ms ease, background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .tab:hover {
+      transform: translateY(-1px);
+    }
+
+    .tab[aria-selected="true"] {
+      background: var(--text);
+      color: #fff9f0;
+      box-shadow: 0 10px 22px rgba(31, 36, 48, 0.16);
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+    }
+
+    .swatch.good { background: var(--good); }
+    .swatch.bad { background: var(--bad); }
+    .swatch.accent { background: var(--accent); }
+    .swatch.neutral { background: var(--stem); }
+
+    .chart-shell {
+      position: relative;
+      min-height: 520px;
+      border-radius: 22px;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(255, 252, 247, 0.95)),
+        repeating-linear-gradient(
+          to bottom,
+          rgba(216, 206, 193, 0.22) 0,
+          rgba(216, 206, 193, 0.22) 1px,
+          transparent 1px,
+          transparent 56px
+        );
+      border: 1px solid rgba(98, 75, 42, 0.08);
+    }
+
+    .chart-meta {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: end;
+      padding: 18px 18px 0;
+    }
+
+    .chart-title {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+
+    .chart-note {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .svg-wrap {
+      padding: 8px 8px 6px;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      overflow: visible;
+    }
+
+    .axis text {
+      fill: var(--muted);
+      font-size: 12px;
+    }
+
+    .axis path,
+    .axis line {
+      stroke: rgba(103, 113, 134, 0.3);
+      shape-rendering: crispEdges;
+    }
+
+    .grid line {
+      stroke: rgba(174, 160, 142, 0.2);
+    }
+
+    .grid path {
+      display: none;
+    }
+
+    .country-label {
+      fill: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .country-label.france {
+      fill: var(--accent);
+      font-weight: 800;
+    }
+
+    .value-label {
+      font-size: 12px;
+      font-weight: 700;
+      fill: var(--text);
+    }
+
+    .value-label.france {
+      fill: var(--accent);
+    }
+
+    .rule {
+      stroke: var(--stem);
+      stroke-width: 2;
+      stroke-linecap: round;
+      opacity: 0.7;
+    }
+
+    .rule.good { stroke: var(--good); }
+    .rule.bad { stroke: var(--bad); }
+    .rule.france { stroke: var(--accent); }
+
+    .dot {
+      stroke: #fff8ee;
+      stroke-width: 2.2;
+      filter: drop-shadow(0 2px 4px rgba(31, 36, 48, 0.12));
+    }
+
+    .dot.good { fill: var(--good); }
+    .dot.bad { fill: var(--bad); }
+    .dot.neutral { fill: var(--stem); }
+    .dot.france {
+      fill: var(--accent);
+      stroke: var(--accent-soft);
+      stroke-width: 3;
+    }
+
+    .tooltip {
+      position: absolute;
+      pointer-events: none;
+      opacity: 0;
+      transform: translate(-50%, calc(-100% - 14px));
+      background: rgba(30, 34, 44, 0.96);
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 12px;
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.18);
+      font-size: 0.9rem;
+      line-height: 1.35;
+      white-space: nowrap;
+      z-index: 10;
+    }
+
+    .tooltip strong {
+      display: block;
+      font-size: 0.95rem;
+      margin-bottom: 2px;
+    }
+
+    .status {
+      min-height: 24px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .status strong {
+      color: var(--focus);
+    }
+
+    .chapter-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .chapter-link {
+      appearance: none;
+      border: 1px solid rgba(98, 75, 42, 0.12);
+      background: rgba(255, 250, 241, 0.82);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 10px 16px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(62, 50, 34, 0.08);
+      transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+    }
+
+    .chapter-link:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 28px rgba(62, 50, 34, 0.12);
+      background: rgba(255, 248, 233, 0.96);
+    }
+
+    .chapter-link:focus-visible,
+    .tab:focus-visible {
+      outline: 3px solid rgba(24, 49, 83, 0.24);
+      outline-offset: 2px;
+    }
+
+    .act2-panel {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(245, 249, 255, 0.88));
+    }
+
+    .act2-title {
+      margin: 0;
+      font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+      font-size: clamp(1.8rem, 3vw, 2.5rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+
+    .act2-note {
+      margin: 10px 0 0;
+      max-width: 72ch;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .act2-controls {
+      align-items: flex-start;
+      gap: 18px;
+    }
+
+    .act2-tabs {
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .act2-summary {
+      color: var(--focus);
+      font-weight: 700;
+    }
+
+    .act2-chart-shell {
+      min-height: 560px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(244, 247, 255, 0.97)),
+        repeating-linear-gradient(
+          to right,
+          rgba(196, 208, 234, 0.18) 0,
+          rgba(196, 208, 234, 0.18) 1px,
+          transparent 1px,
+          transparent 64px
+        );
+    }
+
+    .act2-grid line {
+      stroke: rgba(103, 113, 134, 0.16);
+    }
+
+    .act2-axis text {
+      fill: var(--muted);
+      font-size: 12px;
+    }
+
+    .act2-axis path,
+    .act2-axis line {
+      stroke: rgba(103, 113, 134, 0.28);
+    }
+
+    .act2-bar {
+      fill: rgba(42, 99, 235, 0.66);
+    }
+
+    .act2-bar:hover {
+      fill: rgba(42, 99, 235, 0.88);
+    }
+
+    .act2-line {
+      fill: none;
+      stroke: #c2410c;
+      stroke-width: 3.25;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .act2-point {
+      fill: #c2410c;
+      stroke: #fffdf8;
+      stroke-width: 2.5;
+      filter: drop-shadow(0 2px 4px rgba(31, 36, 48, 0.12));
+    }
+
+    .act2-point.inverted {
+      fill: #0f766e;
+    }
+
+    .act2-value-label {
+      fill: #183153;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .act2-note-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(24, 49, 83, 0.06);
+      color: var(--focus);
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .act2-note-badge::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #c2410c;
+      box-shadow: 18px 0 0 #2a63eb;
+    }
+
+    @media (max-width: 720px) {
+      .page {
+        width: min(100vw - 18px, 1240px);
+        margin: 10px auto 18px;
+      }
+
+      .hero,
+      .panel {
+        border-radius: 20px;
+        padding: 18px 14px;
+      }
+
+      .controls,
+      .chart-meta {
+        align-items: start;
+      }
+
+      .tabs {
+        width: 100%;
+      }
+
+      .tab {
+        flex: 1 1 auto;
+        text-align: center;
+      }
+
+      .chapter-nav {
+        gap: 8px;
+      }
+
+      .chapter-link {
+        width: 100%;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <p class="eyebrow">Acte 4</p>
+      <h1>Qui tient vraiment la promesse ?</h1>
+      <p class="subtitle">Certains États réalisent mieux la promesse ancestrale de leurs fonctions — avec moins.</p>
+    </section>
+
+    <section class="panel" id="acte4" aria-label="Graphique d'efficacité">
+      <div class="controls">
+        <div class="tabs" role="tablist" aria-label="Filtre par fonction COFOG">
+          <button class="tab" role="tab" id="tab-gf03" aria-selected="true" aria-controls="panel-chart" data-code="GF03">GF03</button>
+          <button class="tab" role="tab" id="tab-gf07" aria-selected="false" aria-controls="panel-chart" data-code="GF07">GF07</button>
+          <button class="tab" role="tab" id="tab-gf10" aria-selected="false" aria-controls="panel-chart" data-code="GF10">GF10</button>
+        </div>
+
+        <div class="legend" aria-hidden="true">
+          <span class="legend-item"><span class="swatch accent"></span>France</span>
+          <span class="legend-item"><span class="swatch good"></span>Top 3</span>
+          <span class="legend-item"><span class="swatch bad"></span>Bottom 3</span>
+          <span class="legend-item"><span class="swatch neutral"></span>Autres pays</span>
+        </div>
+      </div>
+
+      <div class="chart-shell" id="panel-chart">
+        <div class="chart-meta">
+          <div>
+            <p class="chart-title" id="chart-title">GF03 — Ordre et sécurité publics</p>
+            <p class="chart-note" id="chart-note">16 pays classés par score d’efficacité, du plus efficient au moins efficient.</p>
+          </div>
+          <div class="chart-note" id="chart-summary">Score faible = meilleure efficacité.</div>
+        </div>
+        <div class="svg-wrap">
+          <svg id="chart" role="img" aria-labelledby="chart-title chart-note"></svg>
+        </div>
+        <div class="tooltip" id="tooltip" aria-hidden="true"></div>
+      </div>
+
+      <div class="status" id="status">Affichage initial : <strong>GF03</strong>.</div>
+    </section>
+  </main>
+
+  <script>
+    const embeddedCsv = `pays;code_pays;cofog;libelle_cofog;score_efficacite;rang_bien_etre_moyen;rang_depense_moyen;annees_utilisees;classement_fonction
+Lettonie;LVA;GF03;Ordre et sécurité publics;0,1486632812;1,0000000000;8,9000000000;20;1,0000000000
+Estonie;EST;GF03;Ordre et sécurité publics;0,3574314574;2,9000000000;8,5000000000;10;2,0000000000
+Lituanie;LTU;GF03;Ordre et sécurité publics;0,5640350877;2,1052631579;4,1578947368;19;3,0000000000
+Grèce;GRC;GF03;Ordre et sécurité publics;0,5767316017;4,9473684211;10,1578947368;19;4,0000000000
+République slovaque;SVK;GF03;Ordre et sécurité publics;0,6251015651;7,6000000000;11,9333333333;15;5,0000000000
+Portugal;PRT;GF03;Ordre et sécurité publics;0,7542233560;5,5714285714;7,5000000000;14;6,0000000000
+Espagne;ESP;GF03;Ordre et sécurité publics;0,8353535354;8,5625000000;10,3750000000;16;7,0000000000
+Belgique;BEL;GF03;Ordre et sécurité publics;0,8437500000;6,2500000000;7,5000000000;4;8,0000000000
+France;FRA;GF03;Ordre et sécurité publics;0,8611111111;6,0000000000;7,0000000000;3;9,0000000000
+Pays-Bas;NLD;GF03;Ordre et sécurité publics;0,9719169719;7,1538461538;8,0000000000;13;10,0000000000
+Italie;ITA;GF03;Ordre et sécurité publics;1,0700292398;8,6315789474;8,2631578947;19;11,0000000000
+Finlande;FIN;GF03;Ordre et sécurité publics;2,0701754386;3,6315789474;1,9473684211;19;12,0000000000
+Allemagne;DEU;GF03;Ordre et sécurité publics;2,6878787879;11,9090909091;4,7272727273;11;13,0000000000
+Autriche;AUT;GF03;Ordre et sécurité publics;5,4250000000;10,3750000000;2,8750000000;16;14,0000000000
+Irlande;IRL;GF03;Ordre et sécurité publics;5,9736842105;9,4736842105;2,5789473684;19;15,0000000000
+Luxembourg;LUX;GF03;Ordre et sécurité publics;6,0625000000;9,5000000000;2,1250000000;8;16,0000000000
+Espagne;ESP;GF07;Santé;0,1998015873;1,1875000000;6,6250000000;16;1,0000000000
+Italie;ITA;GF07;Santé;0,2330447330;1,7894736842;7,9473684211;19;2,0000000000
+France;FRA;GF07;Santé;0,2783882784;3,6666666667;13,3333333333;3;3,0000000000
+Pays-Bas;NLD;GF07;Santé;0,4350815851;4,5384615385;10,6153846154;13;4,0000000000
+Autriche;AUT;GF07;Santé;0,4499535187;5,5000000000;12,0000000000;16;5,0000000000
+Belgique;BEL;GF07;Santé;0,6043956044;8,0000000000;13,2500000000;4;6,0000000000
+Grèce;GRC;GF07;Santé;0,9076213260;5,7894736842;6,9473684211;19;7,0000000000
+Finlande;FIN;GF07;Santé;0,9399214820;5,8947368421;8,3157894737;19;8,0000000000
+Luxembourg;LUX;GF07;Santé;1,0937500000;3,2500000000;3,0000000000;8;9,0000000000
+Portugal;PRT;GF07;Santé;1,1916666667;7,7857142857;7,3571428571;14;10,0000000000
+Irlande;IRL;GF07;Santé;1,2002506266;4,3157894737;5,2631578947;19;11,0000000000
+Allemagne;DEU;GF07;Santé;1,2101698806;8,9090909091;8,4545454545;11;12,0000000000
+République slovaque;SVK;GF07;Santé;1,8427513228;10,2666666667;5,9333333333;15;13,0000000000
+Estonie;EST;GF07;Santé;2,4859523810;11,1000000000;4,8000000000;10;14,0000000000
+Lituanie;LTU;GF07;Santé;4,9780701754;11,0526315789;2,2631578947;19;15,0000000000
+Lettonie;LVA;GF07;Santé;9,7416666667;10,8500000000;1,4000000000;20;16,0000000000
+Grèce;GRC;GF10;Sécurité sociale et oeuvres sociales;0,4579540343;4,2631578947;10,1052631579;19;1,0000000000
+Espagne;ESP;GF10;Sécurité sociale et oeuvres sociales;0,4617559524;3,1250000000;7,0000000000;16;2,0000000000
+Italie;ITA;GF10;Sécurité sociale et oeuvres sociales;0,5524920985;4,8947368421;9,6842105263;19;3,0000000000
+France;FRA;GF10;Sécurité sociale et oeuvres sociales;0,8307692308;11,3333333333;13,6666666667;3;4,0000000000
+Autriche;AUT;GF10;Sécurité sociale et oeuvres sociales;0,8731400544;8,7500000000;10,1250000000;16;5,0000000000
+Lituanie;LTU;GF10;Sécurité sociale et oeuvres sociales;0,9982456140;2,7894736842;3,0526315789;19;6,0000000000
+Portugal;PRT;GF10;Sécurité sociale et oeuvres sociales;1,0061507937;6,5000000000;6,7857142857;14;7,0000000000
+Finlande;FIN;GF10;Sécurité sociale et oeuvres sociales;1,0352775879;11,6315789474;11,3157894737;19;8,0000000000
+Luxembourg;LUX;GF10;Sécurité sociale et oeuvres sociales;1,0515873016;8,3750000000;8,1250000000;8;9,0000000000
+Allemagne;DEU;GF10;Sécurité sociale et oeuvres sociales;1,0834415584;8,6363636364;8,2727272727;11;10,0000000000
+Estonie;EST;GF10;Sécurité sociale et oeuvres sociales;1,1083333333;2,3000000000;2,4000000000;10;11,0000000000
+Belgique;BEL;GF10;Sécurité sociale et oeuvres sociales;1,1659090909;12,5000000000;10,7500000000;4;12,0000000000
+Lettonie;LVA;GF10;Sécurité sociale et oeuvres sociales;1,3833333333;1,8500000000;1,6500000000;20;13,0000000000
+Pays-Bas;NLD;GF10;Sécurité sociale et oeuvres sociales;1,9756410256;10,7692307692;5,3846153846;13;14,0000000000
+République slovaque;SVK;GF10;Sécurité sociale et oeuvres sociales;2,6777777778;10,3333333333;4,1333333333;15;15,0000000000
+Irlande;IRL;GF10;Sécurité sociale et oeuvres sociales;5,8947368421;8,8421052632;2,6842105263;19;16,0000000000`;
+
+    const tabs = Array.from(document.querySelectorAll('#acte4 .tab[data-code]'));
+    const svg = d3.select('#chart');
+    const tooltip = document.getElementById('tooltip');
+    const chartTitle = document.getElementById('chart-title');
+    const chartNote = document.getElementById('chart-note');
+    const chartSummary = document.getElementById('chart-summary');
+    const status = document.getElementById('status');
+
+    const labels = {
+      GF03: 'Ordre et sécurité publics',
+      GF07: 'Santé',
+      GF10: 'Sécurité sociale et oeuvres sociales',
+    };
+
+    const rowFormat = d3.dsvFormat(';');
+    const parseNumber = (value) => Number(String(value).replace(',', '.'));
+    const rawData = rowFormat.parse(embeddedCsv, (row) => ({
+      pays: row.pays,
+      code_pays: row.code_pays,
+      cofog: row.cofog,
+      libelle_cofog: row.libelle_cofog,
+      score_efficacite: parseNumber(row.score_efficacite),
+      rang_bien_etre_moyen: parseNumber(row.rang_bien_etre_moyen),
+      rang_depense_moyen: parseNumber(row.rang_depense_moyen),
+      annees_utilisees: parseNumber(row.annees_utilisees),
+      classement_fonction: parseNumber(row.classement_fonction),
+    }));
+
+    const margin = { top: 28, right: 46, bottom: 28, left: 212 };
+    const rowHeight = 34;
+    const plotWidth = 920;
+    let activeCode = 'GF03';
+
+    function formatScore(value) {
+      return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(value);
+    }
+
+    function positionTooltip(event) {
+      const bounds = event.currentTarget.closest('.chart-shell').getBoundingClientRect();
+      const x = event.clientX - bounds.left;
+      const y = event.clientY - bounds.top;
+      tooltip.style.left = `${x}px`;
+      tooltip.style.top = `${y}px`;
+    }
+
+    function showTooltip(event, d, rank) {
+      tooltip.innerHTML = `<strong>${d.pays}</strong>Score: ${formatScore(d.score_efficacite)}<br>Rang: ${rank}/16`;
+      tooltip.style.opacity = '1';
+      tooltip.setAttribute('aria-hidden', 'false');
+      positionTooltip(event);
+    }
+
+    function hideTooltip() {
+      tooltip.style.opacity = '0';
+      tooltip.setAttribute('aria-hidden', 'true');
+    }
+
+    function render(code) {
+      activeCode = code;
+      const data = rawData
+        .filter((d) => d.cofog === code)
+        .slice()
+        .sort((a, b) => d3.ascending(a.score_efficacite, b.score_efficacite) || d3.ascending(a.pays, b.pays));
+
+      const width = Math.min(plotWidth, Math.max(540, document.querySelector('.chart-shell').clientWidth - 16));
+      const height = margin.top + margin.bottom + rowHeight * data.length;
+      const innerWidth = width - margin.left - margin.right;
+      const innerHeight = height - margin.top - margin.bottom;
+      const xMax = d3.max(data, (d) => d.score_efficacite) * 1.08;
+      const x = d3.scaleLinear().domain([0, xMax]).nice().range([0, innerWidth]);
+      const y = d3.scaleBand().domain(data.map((d) => d.pays)).range([0, innerHeight]).padding(0.35);
+
+      svg.attr('viewBox', `0 0 ${width} ${height}`);
+      svg.selectAll('*').remove();
+
+      const root = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+      root.append('g')
+        .attr('class', 'grid')
+        .call(d3.axisTop(x).ticks(5).tickSize(-innerHeight).tickFormat(() => ''));
+
+      root.append('g')
+        .attr('class', 'axis')
+        .attr('transform', `translate(0,${innerHeight})`)
+        .call(d3.axisBottom(x).ticks(5).tickFormat((d) => formatScore(d)));
+
+      root.append('g')
+        .attr('class', 'axis')
+        .call(d3.axisLeft(y).tickSize(0))
+        .call((g) => g.select('.domain').remove())
+        .call((g) => g.selectAll('.tick text').attr('class', (d) => d === 'France' ? 'country-label france' : 'country-label'));
+
+      root.append('line')
+        .attr('x1', x(0))
+        .attr('x2', x(0))
+        .attr('y1', 0)
+        .attr('y2', innerHeight)
+        .attr('stroke', 'rgba(31, 36, 48, 0.12)')
+        .attr('stroke-width', 1.25)
+        .attr('stroke-dasharray', '4 6');
+
+      const group = root.selectAll('.lollipop')
+        .data(data, (d) => d.pays)
+        .join('g')
+        .attr('class', 'lollipop')
+        .attr('transform', (d) => `translate(0,${y(d.pays) + y.bandwidth() / 2})`);
+
+      group.append('line')
+        .attr('class', (d, i) => {
+          if (d.pays === 'France') return 'rule france';
+          if (i < 3) return 'rule good';
+          if (i >= data.length - 3) return 'rule bad';
+          return 'rule';
+        })
+        .attr('x1', x(0))
+        .attr('x2', (d) => x(d.score_efficacite))
+        .attr('y1', 0)
+        .attr('y2', 0);
+
+      group.append('circle')
+        .attr('class', (d, i) => {
+          if (d.pays === 'France') return 'dot france';
+          if (i < 3) return 'dot good';
+          if (i >= data.length - 3) return 'dot bad';
+          return 'dot neutral';
+        })
+        .attr('cx', (d) => x(d.score_efficacite))
+        .attr('cy', 0)
+        .attr('r', (d) => d.pays === 'France' ? 8.5 : 7)
+        .on('mouseenter', function(event, d) {
+          const rank = data.findIndex((item) => item.pays === d.pays) + 1;
+          showTooltip(event, d, rank);
+          d3.select(this).raise();
+        })
+        .on('mousemove', positionTooltip)
+        .on('mouseleave', hideTooltip);
+
+      group.append('text')
+        .attr('class', (d) => d.pays === 'France' ? 'value-label france' : 'value-label')
+        .attr('x', (d) => x(d.score_efficacite) + 12)
+        .attr('y', 4)
+        .text((d) => formatScore(d.score_efficacite));
+
+      chartTitle.textContent = `${code} — ${labels[code]}`;
+      chartNote.textContent = '16 pays classés par score d’efficacité, du plus efficient au moins efficient.';
+      chartSummary.textContent = 'Score faible = meilleure efficacité. France reste accentuée dans toutes les vues.';
+      status.innerHTML = `Affichage actuel : <strong>${code}</strong> · ${data.length} pays · classement par score_efficacite.`;
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        tabs.forEach((button) => button.setAttribute('aria-selected', 'false'));
+        tab.setAttribute('aria-selected', 'true');
+        render(tab.dataset.code);
+      });
+    });
+
+    window.addEventListener('resize', () => render(activeCode));
+
+    render(activeCode);
+  </script>
+</body>
+</html>

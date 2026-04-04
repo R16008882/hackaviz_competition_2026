@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Acte 2 - Portrait de la France</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    :root {
+      --bg: #eef3fb;
+      --panel: rgba(255, 255, 255, 0.9);
+      --text: #182235;
+      --muted: #5f6b80;
+      --shadow: 0 18px 44px rgba(25, 38, 61, 0.14);
+      --primary: #2a63eb;
+      --primary-soft: #dfe8ff;
+      --line: #d1731a;
+      --grid: rgba(103, 113, 134, 0.16);
+      --focus: #17325a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "Aptos", "Segoe UI", "Trebuchet MS", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(42, 99, 235, 0.12), transparent 28%),
+        radial-gradient(circle at 90% 10%, rgba(209, 115, 26, 0.12), transparent 24%),
+        linear-gradient(145deg, #edf4ff 0%, #f7f9fd 46%, #eef3f8 100%);
+    }
+
+    .page {
+      width: min(1240px, calc(100vw - 32px));
+      margin: 24px auto 32px;
+    }
+
+    .hero {
+      padding: 28px;
+      border-radius: 28px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(244, 248, 255, 0.88));
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(40, 62, 96, 0.08);
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--line);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+
+    .subtitle {
+      margin: 12px 0 0;
+      max-width: 80ch;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 1.02rem;
+    }
+
+    .panel {
+      margin-top: 16px;
+      padding: 18px;
+      border-radius: 24px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(40, 62, 96, 0.08);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .tabs {
+      display: inline-flex;
+      gap: 8px;
+      padding: 6px;
+      border-radius: 999px;
+      background: rgba(239, 244, 255, 0.9);
+      border: 1px solid rgba(40, 62, 96, 0.08);
+    }
+
+    .tab {
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      padding: 11px 16px;
+      font: inherit;
+      font-weight: 800;
+      color: var(--muted);
+      background: transparent;
+      cursor: pointer;
+      transition: transform 160ms ease, background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .tab:hover { transform: translateY(-1px); }
+
+    .tab[aria-selected="true"] {
+      background: var(--text);
+      color: #f7fbff;
+      box-shadow: 0 10px 22px rgba(24, 34, 53, 0.16);
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+    }
+
+    .swatch.bar { background: var(--primary); }
+    .swatch.line { background: var(--line); }
+    .swatch.inverted { background: #0f766e; }
+
+    .chart-shell {
+      position: relative;
+      min-height: 560px;
+      overflow: hidden;
+      border-radius: 22px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(246, 250, 255, 0.98)),
+        repeating-linear-gradient(
+          to right,
+          rgba(173, 191, 230, 0.16) 0,
+          rgba(173, 191, 230, 0.16) 1px,
+          transparent 1px,
+          transparent 72px
+        );
+      border: 1px solid rgba(40, 62, 96, 0.08);
+    }
+
+    .chart-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: end;
+      padding: 18px 18px 0;
+    }
+
+    .chart-title {
+      margin: 0;
+      font-size: 1.06rem;
+      font-weight: 800;
+    }
+
+    .chart-note {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+
+    .svg-wrap {
+      padding: 8px 8px 6px;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      overflow: visible;
+    }
+
+    .axis text {
+      fill: var(--muted);
+      font-size: 12px;
+    }
+
+    .axis path,
+    .axis line {
+      stroke: rgba(95, 107, 128, 0.26);
+      shape-rendering: crispEdges;
+    }
+
+    .grid line { stroke: var(--grid); }
+    .grid path { display: none; }
+
+    .bar {
+      fill: rgba(42, 99, 235, 0.7);
+      rx: 2;
+    }
+
+    .bar:hover { fill: rgba(42, 99, 235, 0.88); }
+
+    .line-path {
+      fill: none;
+      stroke: var(--line);
+      stroke-width: 3.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .point {
+      fill: var(--line);
+      stroke: #fffdf8;
+      stroke-width: 2.4;
+      filter: drop-shadow(0 2px 4px rgba(24, 34, 53, 0.12));
+    }
+
+    .point.inverted {
+      fill: #0f766e;
+    }
+
+    .value-label {
+      fill: var(--focus);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .tooltip {
+      position: absolute;
+      pointer-events: none;
+      opacity: 0;
+      transform: translate(-50%, calc(-100% - 14px));
+      background: rgba(19, 24, 36, 0.96);
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 12px;
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.18);
+      font-size: 0.9rem;
+      line-height: 1.35;
+      white-space: nowrap;
+      z-index: 10;
+    }
+
+    .tooltip strong {
+      display: block;
+      margin-bottom: 2px;
+      font-size: 0.95rem;
+    }
+
+    .status {
+      min-height: 24px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .status strong { color: var(--focus); }
+
+    .warning {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 720px) {
+      .page {
+        width: min(100vw - 18px, 1240px);
+        margin: 10px auto 18px;
+      }
+
+      .hero,
+      .panel {
+        border-radius: 20px;
+        padding: 18px 14px;
+      }
+
+      .tabs {
+        width: 100%;
+      }
+
+      .tab {
+        flex: 1 1 auto;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <p class="eyebrow">Acte 2</p>
+      <h1>Portrait de la France</h1>
+      <p class="subtitle">La France dépense massivement — mais le bien-être suit-il la même courbe ? Les barres montrent la dépense en % du PIB et la courbe le bien-être sur 2004–2023.</p>
+    </section>
+
+    <section class="panel" aria-label="Acte 2 - Portrait de la France">
+      <div class="controls">
+        <div class="tabs" role="tablist" aria-label="Filtre des fonctions">
+          <button class="tab" type="button" role="tab" aria-selected="true" data-code="GF03">GF03</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" data-code="GF07">GF07</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" data-code="GF10">GF10</button>
+        </div>
+
+        <div class="legend" aria-hidden="true">
+          <span class="legend-item"><span class="swatch bar"></span>Dépense</span>
+          <span class="legend-item"><span class="swatch line"></span>Bien-être</span>
+          <span class="legend-item"><span class="swatch inverted"></span>Axe inversé</span>
+        </div>
+      </div>
+
+      <div class="chart-shell" id="chart-shell">
+        <div class="chart-meta">
+          <div>
+            <p class="chart-title" id="chart-title">GF03 — Ordre et sécurité publics</p>
+            <p class="chart-note" id="chart-note">2004–2023 · barres sur l’axe gauche et courbe sur l’axe droit.</p>
+          </div>
+          <div class="chart-note" id="chart-summary">Axe bien-être inversé pour les indicateurs où une baisse est favorable.</div>
+        </div>
+        <div class="svg-wrap">
+          <svg id="chart" role="img" aria-labelledby="chart-title chart-note"></svg>
+        </div>
+        <div class="tooltip" id="tooltip" aria-hidden="true"></div>
+      </div>
+
+      <div class="status" id="status">Chargement des données de l’Acte 2…</div>
+      <div class="warning">Le graphique fonctionne directement depuis ce fichier HTML, sans serveur local.</div>
+    </section>
+  </main>
+
+  <script>
+    const META = {
+      GF03: {
+        label: 'Ordre et sécurité publics',
+        indicator: 'Homicides',
+        invertWellbeing: true,
+      },
+      GF07: {
+        label: 'Santé',
+        indicator: 'Espérance de vie à la naissance',
+        invertWellbeing: false,
+      },
+      GF10: {
+        label: 'Sécurité sociale et oeuvres sociales',
+        indicator: 'Difficultés à joindre les deux bouts',
+        invertWellbeing: true,
+      },
+    };
+
+    const tabs = Array.from(document.querySelectorAll('.tab'));
+    const svg = d3.select('#chart');
+    const tooltip = document.getElementById('tooltip');
+    const chartTitle = document.getElementById('chart-title');
+    const chartNote = document.getElementById('chart-note');
+    const chartSummary = document.getElementById('chart-summary');
+    const status = document.getElementById('status');
+
+    const dsv = d3.dsvFormat(';');
+    const parseNumber = (value) => {
+      const text = String(value ?? '').trim();
+      return text === '' ? null : Number(text.replace(',', '.'));
+    };
+
+    function toKey(code, year) {
+      return `${code}-${year}`;
+    }
+
+    function formatOne(value) {
+      return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(value);
+    }
+
+    function formatTwo(value) {
+      return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(value);
+    }
+
+    function positionTooltip(event) {
+      const bounds = event.currentTarget.closest('.chart-shell').getBoundingClientRect();
+      tooltip.style.left = `${event.clientX - bounds.left}px`;
+      tooltip.style.top = `${event.clientY - bounds.top}px`;
+    }
+
+    function showTooltip(event, row) {
+      tooltip.innerHTML = `<strong>${row.year}</strong>Dépense : ${row.depensePctPib == null ? 'n/d' : formatTwo(row.depensePctPib)} % PIB<br>Bien-être : ${row.bienetre == null ? 'n/d' : formatTwo(row.bienetre)}`;
+      tooltip.style.opacity = '1';
+      tooltip.setAttribute('aria-hidden', 'false');
+      positionTooltip(event);
+    }
+
+    function hideTooltip() {
+      tooltip.style.opacity = '0';
+      tooltip.setAttribute('aria-hidden', 'true');
+    }
+
+    const EMBEDDED_DATA = {
+      GF03: {
+        label: 'Ordre et sécurité publics',
+        indicator: 'Homicides',
+        invertWellbeing: true,
+        depenseRows: [
+          { year: 2004, depenseMdsEur: 26.161 },
+          { year: 2005, depenseMdsEur: 26.854 },
+          { year: 2006, depenseMdsEur: 27.415 },
+          { year: 2007, depenseMdsEur: 28.477 },
+          { year: 2008, depenseMdsEur: 30.896 },
+          { year: 2009, depenseMdsEur: 32.292 },
+          { year: 2010, depenseMdsEur: 33.439 },
+          { year: 2011, depenseMdsEur: 33.749 },
+          { year: 2012, depenseMdsEur: 34.073 },
+          { year: 2013, depenseMdsEur: 34.523 },
+          { year: 2014, depenseMdsEur: 35.048 },
+          { year: 2015, depenseMdsEur: 35.77 },
+          { year: 2016, depenseMdsEur: 36.711 },
+          { year: 2017, depenseMdsEur: 37.847 },
+          { year: 2018, depenseMdsEur: 38.606 },
+          { year: 2019, depenseMdsEur: 40.211 },
+          { year: 2020, depenseMdsEur: 41.22 },
+          { year: 2021, depenseMdsEur: 42.776 },
+          { year: 2022, depenseMdsEur: 45.475 },
+          { year: 2023, depenseMdsEur: 48.712 },
+        ],
+        lightRows: [
+          { year: 2004, label: '03 - Ordre et sécurité publics', pib: 2081812.11, depensePctPib: 1.256645586522215, indicator: 'Homicides', bienetre: 0.8 },
+          { year: 2005, label: '03 - Ordre et sécurité publics', pib: 2121222.67, depensePctPib: 1.2659679900554712, indicator: 'Homicides', bienetre: 0.7 },
+          { year: 2006, label: '03 - Ordre et sécurité publics', pib: 2176861.26, depensePctPib: 1.259382051752807, indicator: 'Homicides', bienetre: 0.7 },
+          { year: 2007, label: '03 - Ordre et sécurité publics', pib: 2232499.99, depensePctPib: 1.2755655152320962, indicator: 'Homicides', bienetre: 0.6 },
+          { year: 2008, label: '03 - Ordre et sécurité publics', pib: 2241773.0, depensePctPib: 1.3781948484525417, indicator: 'Homicides', bienetre: 0.7 },
+          { year: 2009, label: '03 - Ordre et sécurité publics', pib: 2179179.6, depensePctPib: 1.481842065702157, indicator: 'Homicides', bienetre: 0.8 },
+          { year: 2010, label: '03 - Ordre et sécurité publics', pib: 2220908.56, depensePctPib: 1.5056450590653763, indicator: 'Homicides', bienetre: 0.7 },
+          { year: 2011, label: '03 - Ordre et sécurité publics', pib: 2276547.31, depensePctPib: 1.482464249776562, indicator: 'Homicides', bienetre: 0.6 },
+          { year: 2012, label: '03 - Ordre et sécurité publics', pib: 2281183.83, depensePctPib: 1.49365428388119, indicator: 'Homicides', bienetre: 0.6 },
+          { year: 2013, label: '03 - Ordre et sécurité publics', pib: 2297411.82, depensePctPib: 1.5026909716169219, indicator: 'Homicides', bienetre: 0.6 },
+          { year: 2014, label: '03 - Ordre et sécurité publics', pib: 2320594.52, depensePctPib: 1.510302627104368, indicator: 'Homicides', bienetre: 0.5 },
+          { year: 2015, label: '03 - Ordre et sécurité publics', pib: 2346095.39, depensePctPib: 1.524660938871714, indicator: 'Homicides', bienetre: 0.5 },
+          { year: 2016, label: '03 - Ordre et sécurité publics', pib: 2366960.08, depensePctPib: 1.550976727921833, indicator: 'Homicides', bienetre: 0.4 },
+          { year: 2017, label: '03 - Ordre et sécurité publics', pib: 2415643.85, depensePctPib: 1.5667458594941468, indicator: 'Homicides', bienetre: 0.4 },
+          { year: 2018, label: '03 - Ordre et sécurité publics', pib: 2455054.46, depensePctPib: 1.5725109413662457, indicator: 'Homicides', bienetre: 0.6 },
+          { year: 2019, label: '03 - Ordre et sécurité publics', pib: 2503738.35, depensePctPib: 1.6060384264993184, indicator: 'Homicides', bienetre: 0.6 },
+          { year: 2020, label: '03 - Ordre et sécurité publics', pib: 2318276.2, depensePctPib: 1.7780452562123528, indicator: 'Homicides', bienetre: 0.7 },
+          { year: 2021, label: '03 - Ordre et sécurité publics', pib: 2478237.31, depensePctPib: 1.7260655316338531, indicator: 'Homicides', bienetre: 0.8 },
+          { year: 2022, label: '03 - Ordre et sécurité publics', pib: 2545467.38, depensePctPib: 1.7865088493100234, indicator: 'Homicides', bienetre: 0.8 },
+          { year: 2023, label: '03 - Ordre et sécurité publics', pib: 2582559.6, depensePctPib: 1.8861907388313517, indicator: 'Homicides', bienetre: null },
+        ],
+      },
+      GF07: {
+        label: 'Santé',
+        indicator: 'Espérance de vie à la naissance',
+        invertWellbeing: false,
+        depenseRows: [
+          { year: 2004, depenseMdsEur: 129.308 },
+          { year: 2005, depenseMdsEur: 137.428 },
+          { year: 2006, depenseMdsEur: 142.088 },
+          { year: 2007, depenseMdsEur: 147.175 },
+          { year: 2008, depenseMdsEur: 150.665 },
+          { year: 2009, depenseMdsEur: 157.398 },
+          { year: 2010, depenseMdsEur: 162.526 },
+          { year: 2011, depenseMdsEur: 167.496 },
+          { year: 2012, depenseMdsEur: 170.537 },
+          { year: 2013, depenseMdsEur: 174.363 },
+          { year: 2014, depenseMdsEur: 179.572 },
+          { year: 2015, depenseMdsEur: 180.941 },
+          { year: 2016, depenseMdsEur: 184.631 },
+          { year: 2017, depenseMdsEur: 190.006 },
+          { year: 2018, depenseMdsEur: 193.539 },
+          { year: 2019, depenseMdsEur: 198.147 },
+          { year: 2020, depenseMdsEur: 208.024 },
+          { year: 2021, depenseMdsEur: 234.725 },
+          { year: 2022, depenseMdsEur: 240.773 },
+          { year: 2023, depenseMdsEur: 249.676 },
+        ],
+        lightRows: [
+          { year: 2004, label: '07 - Santé', pib: 2081812.11, depensePctPib: 6.211319425939933, indicator: 'Espérance de vie à la naissance', bienetre: 80.3 },
+          { year: 2005, label: '07 - Santé', pib: 2121222.67, depensePctPib: 6.47871635277215, indicator: 'Espérance de vie à la naissance', bienetre: 80.3 },
+          { year: 2006, label: '07 - Santé', pib: 2176861.26, depensePctPib: 6.527195950007398, indicator: 'Espérance de vie à la naissance', bienetre: 80.9 },
+          { year: 2007, label: '07 - Santé', pib: 2232499.99, depensePctPib: 6.592385247894223, indicator: 'Espérance de vie à la naissance', bienetre: 81.3 },
+          { year: 2008, label: '07 - Santé', pib: 2241773.0, depensePctPib: 6.720796441031273, indicator: 'Espérance de vie à la naissance', bienetre: 81.4 },
+          { year: 2009, label: '07 - Santé', pib: 2179179.6, depensePctPib: 7.222809905158804, indicator: 'Espérance de vie à la naissance', bienetre: 81.5 },
+          { year: 2010, label: '07 - Santé', pib: 2220908.56, depensePctPib: 7.31799601871047, indicator: 'Espérance de vie à la naissance', bienetre: 81.8 },
+          { year: 2011, label: '07 - Santé', pib: 2276547.31, depensePctPib: 7.35745746483081, indicator: 'Espérance de vie à la naissance', bienetre: 82.3 },
+          { year: 2012, label: '07 - Santé', pib: 2281183.83, depensePctPib: 7.47581136413719, indicator: 'Espérance de vie à la naissance', bienetre: 82.1 },
+          { year: 2013, label: '07 - Santé', pib: 2297411.82, depensePctPib: 7.5895404769006545, indicator: 'Espérance de vie à la naissance', bienetre: 82.4 },
+          { year: 2014, label: '07 - Santé', pib: 2320594.52, depensePctPib: 7.738189436041588, indicator: 'Espérance de vie à la naissance', bienetre: 82.9 },
+          { year: 2015, label: '07 - Santé', pib: 2346095.39, depensePctPib: 7.712431505182745, indicator: 'Espérance de vie à la naissance', bienetre: 82.4 },
+          { year: 2016, label: '07 - Santé', pib: 2366960.08, depensePctPib: 7.8003427924310405, indicator: 'Espérance de vie à la naissance', bienetre: 82.7 },
+          { year: 2017, label: '07 - Santé', pib: 2415643.85, depensePctPib: 7.865646254103227, indicator: 'Espérance de vie à la naissance', bienetre: 82.7 },
+          { year: 2018, label: '07 - Santé', pib: 2455054.46, depensePctPib: 7.883287444466711, indicator: 'Espérance de vie à la naissance', bienetre: 82.8 },
+          { year: 2019, label: '07 - Santé', pib: 2503738.35, depensePctPib: 7.914045810737372, indicator: 'Espérance de vie à la naissance', bienetre: 83.0 },
+          { year: 2020, label: '07 - Santé', pib: 2318276.2, depensePctPib: 8.973218980551152, indicator: 'Espérance de vie à la naissance', bienetre: 82.3 },
+          { year: 2021, label: '07 - Santé', pib: 2478237.31, depensePctPib: 9.471449689376197, indicator: 'Espérance de vie à la naissance', bienetre: 82.4 },
+          { year: 2022, label: '07 - Santé', pib: 2545467.38, depensePctPib: 9.458891592631606, indicator: 'Espérance de vie à la naissance', bienetre: 82.3 },
+          { year: 2023, label: '07 - Santé', pib: 2582559.6, depensePctPib: 9.667773010930706, indicator: 'Espérance de vie à la naissance', bienetre: 83.0 },
+        ],
+      },
+      GF10: {
+        label: 'Sécurité sociale et oeuvres sociales',
+        indicator: 'Difficultés à joindre les deux bouts',
+        invertWellbeing: true,
+        depenseRows: [
+          { year: 2004, depenseMdsEur: 368.05 },
+          { year: 2005, depenseMdsEur: 381.7 },
+          { year: 2006, depenseMdsEur: 401.939 },
+          { year: 2007, depenseMdsEur: 424.131 },
+          { year: 2008, depenseMdsEur: 438.453 },
+          { year: 2009, depenseMdsEur: 460.562 },
+          { year: 2010, depenseMdsEur: 473.419 },
+          { year: 2011, depenseMdsEur: 488.8 },
+          { year: 2012, depenseMdsEur: 505.953 },
+          { year: 2013, depenseMdsEur: 518.323 },
+          { year: 2014, depenseMdsEur: 528.086 },
+          { year: 2015, depenseMdsEur: 535.237 },
+          { year: 2016, depenseMdsEur: 545.63 },
+          { year: 2017, depenseMdsEur: 557.07 },
+          { year: 2018, depenseMdsEur: 566.236 },
+          { year: 2019, depenseMdsEur: 582.386 },
+          { year: 2020, depenseMdsEur: 631.373 },
+          { year: 2021, depenseMdsEur: 622.635 },
+          { year: 2022, depenseMdsEur: 632.03 },
+          { year: 2023, depenseMdsEur: 657.931 },
+        ],
+        lightRows: [
+          { year: 2004, label: '10 - Protection sociale', pib: 2081812.11, depensePctPib: 17.679309205286543, indicator: 'Difficultés à joindre les deux bouts', bienetre: 17.7 },
+          { year: 2005, label: '10 - Protection sociale', pib: 2121222.67, depensePctPib: 17.9943390855803, indicator: 'Difficultés à joindre les deux bouts', bienetre: 16.2 },
+          { year: 2006, label: '10 - Protection sociale', pib: 2176861.26, depensePctPib: 18.464153291974153, indicator: 'Difficultés à joindre les deux bouts', bienetre: 15.8 },
+          { year: 2007, label: '10 - Protection sociale', pib: 2232499.99, depensePctPib: 18.9980292004391, indicator: 'Difficultés à joindre les deux bouts', bienetre: 16.1 },
+          { year: 2008, label: '10 - Protection sociale', pib: 2241773.0, depensePctPib: 19.55831388815906, indicator: 'Difficultés à joindre les deux bouts', bienetre: 15.9 },
+          { year: 2009, label: '10 - Protection sociale', pib: 2179179.6, depensePctPib: 21.134650856680192, indicator: 'Difficultés à joindre les deux bouts', bienetre: 19.1 },
+          { year: 2010, label: '10 - Protection sociale', pib: 2220908.56, depensePctPib: 21.316456180438152, indicator: 'Difficultés à joindre les deux bouts', bienetre: 20.2 },
+          { year: 2011, label: '10 - Protection sociale', pib: 2276547.31, depensePctPib: 21.47111100449742, indicator: 'Difficultés à joindre les deux bouts', bienetre: 19.7 },
+          { year: 2012, label: '10 - Protection sociale', pib: 2281183.83, depensePctPib: 22.179404980264128, indicator: 'Difficultés à joindre les deux bouts', bienetre: 19.5 },
+          { year: 2013, label: '10 - Protection sociale', pib: 2297411.82, depensePctPib: 22.561170595875147, indicator: 'Difficultés à joindre les deux bouts', bienetre: 20.7 },
+          { year: 2014, label: '10 - Protection sociale', pib: 2320594.52, depensePctPib: 22.75649603792049, indicator: 'Difficultés à joindre les deux bouts', bienetre: 20.7 },
+          { year: 2015, label: '10 - Protection sociale', pib: 2346095.39, depensePctPib: 22.813948754232026, indicator: 'Difficultés à joindre les deux bouts', bienetre: 19.9 },
+          { year: 2016, label: '10 - Protection sociale', pib: 2366960.08, depensePctPib: 23.05193081245375, indicator: 'Difficultés à joindre les deux bouts', bienetre: 19.2 },
+          { year: 2017, label: '10 - Protection sociale', pib: 2415643.85, depensePctPib: 23.060932595672167, indicator: 'Difficultés à joindre les deux bouts', bienetre: 18.1 },
+          { year: 2018, label: '10 - Protection sociale', pib: 2455054.46, depensePctPib: 23.0640912136833, indicator: 'Difficultés à joindre les deux bouts', bienetre: 18.3 },
+          { year: 2019, label: '10 - Protection sociale', pib: 2503738.35, depensePctPib: 23.260657408550696, indicator: 'Difficultés à joindre les deux bouts', bienetre: 16.8 },
+          { year: 2020, label: '10 - Protection sociale', pib: 2318276.2, depensePctPib: 27.234589217626443, indicator: 'Difficultés à joindre les deux bouts', bienetre: 18.5 },
+          { year: 2021, label: '10 - Protection sociale', pib: 2478237.31, depensePctPib: 25.124107263157942, indicator: 'Difficultés à joindre les deux bouts', bienetre: 16.6 },
+          { year: 2022, label: '10 - Protection sociale', pib: 2545467.38, depensePctPib: 24.82962480548464, indicator: 'Difficultés à joindre les deux bouts', bienetre: 21.7 },
+          { year: 2023, label: '10 - Protection sociale', pib: 2582559.6, depensePctPib: 25.475927060889518, indicator: 'Difficultés à joindre les deux bouts', bienetre: 22.1 },
+        ],
+      },
+    };
+
+    function buildSeries(code) {
+      const meta = EMBEDDED_DATA[code];
+      const depenseMap = new Map(meta.depenseRows.map((row) => [row.year, row]));
+      const lightMap = new Map(meta.lightRows.map((row) => [row.year, row]));
+
+      return d3.range(2004, 2024).map((year) => {
+        const depenseRow = depenseMap.get(year) ?? null;
+        const lightRow = lightMap.get(year) ?? null;
+
+        return {
+          year,
+          label: meta.label,
+          depensePctPib: lightRow?.depensePctPib ?? null,
+          bienetre: lightRow?.bienetre ?? null,
+          depenseMdsEur: depenseRow?.depenseMdsEur ?? null,
+        };
+      });
+    }
+
+    function renderChart(code, seriesFactory) {
+      const meta = META[code];
+      const data = seriesFactory(code);
+      const width = Math.min(1060, Math.max(640, document.querySelector('#chart-shell').clientWidth - 16));
+      const height = 440;
+      const margin = { top: 28, right: 76, bottom: 54, left: 76 };
+      const innerWidth = width - margin.left - margin.right;
+      const innerHeight = height - margin.top - margin.bottom;
+
+      const years = data.map((row) => row.year);
+      const x = d3.scaleBand().domain(years).range([0, innerWidth]).padding(0.22);
+      const depenseMax = d3.max(data, (row) => row.depensePctPib ?? 0) || 1;
+      const depenseY = d3.scaleLinear().domain([0, depenseMax * 1.15]).nice().range([innerHeight, 0]);
+
+      const wellbeingValues = data.map((row) => row.bienetre).filter((value) => value != null);
+      const wellbeingExtent = d3.extent(wellbeingValues);
+      const wellbeingDomain = meta.invertWellbeing
+        ? [wellbeingExtent[1] ?? 1, wellbeingExtent[0] ?? 0]
+        : [wellbeingExtent[0] ?? 0, wellbeingExtent[1] ?? 1];
+      const wellbeingY = d3.scaleLinear()
+        .domain(meta.invertWellbeing
+          ? [wellbeingDomain[0] + 0.08, wellbeingDomain[1] - 0.08]
+          : [wellbeingDomain[0] - 0.08, wellbeingDomain[1] + 0.08])
+        .nice()
+        .range([innerHeight, 0]);
+
+      svg.attr('viewBox', `0 0 ${width} ${height}`);
+      svg.selectAll('*').remove();
+
+      const root = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+      root.append('g')
+        .attr('class', 'grid')
+        .call(d3.axisBottom(x).tickValues(years.filter((year) => year % 2 === 0)).tickSize(-innerHeight).tickFormat(() => ''));
+
+      root.append('g')
+        .attr('class', 'axis')
+        .call(d3.axisLeft(depenseY).ticks(6).tickFormat((value) => formatOne(value)));
+
+      root.append('g')
+        .attr('class', 'axis')
+        .attr('transform', `translate(${innerWidth},0)`)
+        .call(d3.axisRight(wellbeingY).ticks(6).tickFormat((value) => formatOne(value)));
+
+      root.append('g')
+        .attr('class', 'axis')
+        .attr('transform', `translate(0,${innerHeight})`)
+        .call(d3.axisBottom(x).tickValues([2004, 2008, 2012, 2016, 2020, 2023]).tickFormat(String));
+
+      root.append('line')
+        .attr('x1', 0)
+        .attr('x2', innerWidth)
+        .attr('y1', depenseY(0))
+        .attr('y2', depenseY(0))
+        .attr('stroke', 'rgba(24, 50, 90, 0.18)')
+        .attr('stroke-width', 1.1);
+
+      root.append('text')
+        .attr('x', 0)
+        .attr('y', -10)
+        .attr('fill', 'var(--focus)')
+        .attr('font-size', 12)
+        .attr('font-weight', 700)
+        .text('Dépenses publiques en % du PIB');
+
+      root.append('text')
+        .attr('x', innerWidth)
+        .attr('y', -10)
+        .attr('text-anchor', 'end')
+        .attr('fill', 'var(--focus)')
+        .attr('font-size', 12)
+        .attr('font-weight', 700)
+        .text(meta.invertWellbeing ? 'Bien-être (axe inversé)' : 'Bien-être');
+
+      root.selectAll('.bar')
+        .data(data)
+        .join('rect')
+        .attr('class', 'bar')
+        .attr('x', (row) => x(row.year))
+        .attr('y', (row) => depenseY(row.depensePctPib ?? 0))
+        .attr('width', x.bandwidth())
+        .attr('height', (row) => innerHeight - depenseY(row.depensePctPib ?? 0))
+        .on('mouseenter', showTooltip)
+        .on('mousemove', showTooltip)
+        .on('mouseleave', hideTooltip);
+
+      const line = d3.line()
+        .defined((row) => row.bienetre != null)
+        .x((row) => x(row.year) + x.bandwidth() / 2)
+        .y((row) => wellbeingY(row.bienetre));
+
+      root.append('path')
+        .datum(data)
+        .attr('class', 'line-path')
+        .attr('d', line);
+
+      root.selectAll('.point')
+        .data(data.filter((row) => row.bienetre != null))
+        .join('circle')
+        .attr('class', `point${meta.invertWellbeing ? ' inverted' : ''}`)
+        .attr('cx', (row) => x(row.year) + x.bandwidth() / 2)
+        .attr('cy', (row) => wellbeingY(row.bienetre))
+        .attr('r', 5)
+        .on('mouseenter', showTooltip)
+        .on('mousemove', showTooltip)
+        .on('mouseleave', hideTooltip);
+
+      root.selectAll('.value-label')
+        .data(data.filter((row) => row.depensePctPib != null))
+        .join('text')
+        .attr('class', 'value-label')
+        .attr('x', (row) => x(row.year) + x.bandwidth() / 2)
+        .attr('y', (row) => depenseY(row.depensePctPib) - 8)
+        .attr('text-anchor', 'middle')
+        .text((row) => `${formatOne(row.depensePctPib)}%`);
+
+      chartTitle.textContent = `${code} — ${meta.label}`;
+      chartNote.textContent = '2004–2023 · barres à gauche, courbe à droite.';
+      chartSummary.textContent = meta.invertWellbeing
+        ? 'Axe bien-être inversé pour GF03 et GF10.'
+        : 'Axe bien-être standard pour GF07.';
+      status.innerHTML = `Affichage actuel : <strong>${code}</strong> · ${data.length} années · ${meta.label}.`;
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        tabs.forEach((button) => button.setAttribute('aria-selected', 'false'));
+        tab.setAttribute('aria-selected', 'true');
+        renderChart(tab.dataset.code, buildSeries);
+      });
+    });
+
+    window.addEventListener('resize', () => renderChart(document.querySelector('.tab[aria-selected="true"]').dataset.code, buildSeries));
+    renderChart('GF03', buildSeries);
+  </script>
+</body>
+</html>

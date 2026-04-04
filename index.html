@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>La promesse de l'État — Panorama</title>
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link href="https://api.fontshare.com/v2/css?f[]=boska@400,700&f[]=satoshi@400,500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <style>
+    :root{
+      --dark:#1A1A2E;
+      --light:#FAF8F4;
+      --accent:#D4A843;
+      --text:#1A1A2E;
+      --muted:rgba(26,26,46,0.75);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:'Satoshi',sans-serif;-webkit-font-smoothing:antialiased}
+
+    /* Horizontal panorama container */
+    body{
+      overflow-x:auto;
+      overflow-y:hidden;
+      height:100vh;
+      scroll-behavior:smooth;
+      background:var(--light);
+      color:var(--text);
+    }
+
+    main.panorama{
+      display:flex;
+      flex-direction:row;
+      height:100vh;
+      width:calc(100vw * 7); /* safe width for 7 panels */
+      scroll-snap-type:x mandatory;
+    }
+
+    section.panel{
+      min-width:100vw;
+      height:100vh;
+      flex:0 0 100vw;
+      scroll-snap-align:start;
+      display:grid;
+      place-items:center;
+      padding:48px;
+    }
+
+    /* Hero */
+    .hero{background:var(--dark);color:var(--light);text-align:center}
+    .hero .eyebrow{font-size:14px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);font-weight:500;margin-bottom:18px}
+    .hero h1{font-family:'Boska',serif;font-size:clamp(40px,7vw,72px);line-height:0.95;margin:0}
+    .hero p{max-width:760px;margin-top:20px;font-size:18px;line-height:1.8;color:rgba(250,248,244,0.8)}
+
+    /* Context */
+    .context{background:var(--light);color:var(--text);text-align:center}
+    .context h2{font-family:'Boska',serif;font-size:32px;margin-bottom:18px}
+    .context p{max-width:720px;font-size:18px;line-height:1.8;margin:0 auto}
+    .decor{width:40px;height:3px;background:var(--accent);border-radius:999px;margin-top:28px}
+
+    /* Acte iframe */
+    .acte{background:var(--light)}
+    .acte .title{font-family:'Boska',serif;font-size:28px;margin-bottom:18px}
+    .acte .frame{width:94vw;height:86vh;border-radius:18px;overflow:hidden;border:1px solid rgba(0,0,0,0.06);box-shadow:0 24px 60px rgba(0,0,0,0.06)}
+    .acte .frame iframe{width:100%;height:100%;border:0}
+
+    /* Hooks */
+    .hook{position:relative;color:var(--light);text-align:center}
+    .hook.light{background:linear-gradient(180deg,var(--light) 0%,var(--dark) 100%);color:var(--light)}
+    .hook.deep{background:var(--dark);color:var(--light)}
+    .hook .bignum{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Boska',serif;font-weight:800;font-size:clamp(120px,18vw,200px);opacity:0.12;pointer-events:none}
+    .hook .content{position:relative;z-index:2;max-width:760px}
+    .hook h2{font-family:'Boska',serif;font-size:40px;margin-bottom:12px}
+    .hook p{font-size:16px;line-height:1.8;color:inherit;margin-bottom:20px}
+    .btn{display:inline-block;padding:12px 26px;border-radius:999px;border:1px solid var(--accent);color:var(--accent);background:transparent;font-weight:700}
+    .btn:hover{background:var(--accent);color:var(--dark)}
+
+    /* Footer */
+    .footer{background:var(--dark);color:rgba(250,248,244,0.8);text-align:center;padding:24px}
+
+    /* Fixed horizontal nav (right side) */
+    .hnav{position:fixed;right:18px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:12px;z-index:999}
+    .hnav button{width:12px;height:12px;border-radius:999px;border:0;background:rgba(255,255,255,0.55);cursor:pointer;opacity:0.65}
+    .hnav button.active{background:var(--accent);opacity:1;transform:scale(1.15)}
+
+    @media (max-width:720px){
+      .hnav{right:8px}
+      .hero h1{font-size:clamp(28px,10vw,44px)}
+    }
+  </style>
+</head>
+<body>
+  <div class="hnav" aria-hidden="false" id="hnav" role="navigation" aria-label="Navigation horizontale"></div>
+
+  <main class="panorama" id="panorama">
+    <section class="panel hero" id="s-hero" aria-label="Hero">
+      <div>
+        <div class="eyebrow">HACKAVIZ 2026 · TOULOUSE DATAVIZ</div>
+        <h1>La promesse<br>de l'État</h1>
+        <p>Depuis des siècles, les États organisent les mêmes fonctions essentielles. Tiennent-ils encore leur promesse ?</p>
+      </div>
+    </section>
+
+    <section class="panel context" id="s-context" aria-label="Contexte narratif">
+      <div>
+        <h2>Défense, santé, justice, éducation, protection sociale…</h2>
+        <p>Ces fonctions que nous appelons aujourd'hui COFOG existaient déjà sous d'autres noms. Le Bimaristan soignait, la Madrasa enseignait, le Bayt al-Mal protégeait. Aujourd'hui — les milliards investis tiennent-ils la promesse ?</p>
+        <div class="decor" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <section class="panel acte" id="s-acte1" aria-label="Acte 1">
+      <div>
+        <div class="title">I · Les fonctions éternelles de l'État</div>
+        <div class="frame"><iframe src="acte1_etat_eternel.html" title="Acte 1" loading="lazy"></iframe></div>
+      </div>
+    </section>
+
+    <section class="panel hook light" id="s-acte2" aria-label="Acte 2">
+      <div class="bignum" aria-hidden="true">II</div>
+      <div class="content">
+        <h2>Ce que l'Europe dépense aujourd'hui</h2>
+        <p>La France mise en regard de ses voisins — qui dépense quoi, sur quelles fonctions ?</p>
+        <a class="btn" href="acte2_france.html" target="_blank" rel="noreferrer">Voir l'analyse →</a>
+      </div>
+    </section>
+
+    <section class="panel hook deep" id="s-acte3" aria-label="Acte 3">
+      <div class="bignum" aria-hidden="true">III</div>
+      <div class="content">
+        <h2>La promesse tenue ?</h2>
+        <p>Dépenser plus améliore-t-il vraiment la santé, réduit-il la pauvreté, sécurise-t-il les populations ?</p>
+        <a class="btn" href="acte3_promesse.html" target="_blank" rel="noreferrer">Explorer les données →</a>
+      </div>
+    </section>
+
+    <section class="panel hook light" id="s-acte4" aria-label="Acte 4">
+      <div class="bignum" aria-hidden="true" style="color:#8E44AD">IV</div>
+      <div class="content" style="color:var(--text)">
+        <h2 style="color:var(--text)">L'efficacité fonctionnelle</h2>
+        <p style="color:var(--muted)">Quels États honorent le mieux la promesse — par euro investi ?</p>
+        <a class="btn" href="acte4_efficacite.html" target="_blank" rel="noreferrer">Voir le classement →</a>
+      </div>
+    </section>
+
+    <section class="panel footer" id="s-footer" aria-label="Footer">
+      <div>
+        <div><strong>Hackaviz 2026 · Toulouse Dataviz</strong></div>
+        <div style="margin-top:8px;color:rgba(250,248,244,0.6)">Sources : OCDE COFOG · OCDE Better Life Index · Eurostat</div>
+        <div style="margin-top:6px;color:rgba(250,248,244,0.6)">Données disponibles pour les pays de la zone euro · 2002–2025</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function(){
+      const panorama = document.getElementById('panorama');
+      const sections = Array.from(panorama.querySelectorAll('section'));
+      const nav = document.getElementById('hnav');
+
+      // build nav
+      sections.forEach((s, i)=>{
+        const btn = document.createElement('button');
+        btn.setAttribute('aria-label', s.getAttribute('aria-label'));
+        btn.dataset.index = i;
+        btn.addEventListener('click', ()=> s.scrollIntoView({behavior:'smooth',block:'nearest',inline:'start'}));
+        nav.appendChild(btn);
+      });
+
+      const navButtons = Array.from(nav.children);
+
+      // observe sections to update active nav
+      const io = new IntersectionObserver((entries)=>{
+        entries.forEach(entry=>{
+          if(entry.isIntersecting){
+            const idx = sections.indexOf(entry.target);
+            navButtons.forEach(b=>b.classList.toggle('active', parseInt(b.dataset.index)===idx));
+          }
+        });
+      },{root:panorama,threshold:0.5});
+
+      sections.forEach(s=>io.observe(s));
+
+      // keyboard navigation
+      window.addEventListener('keydown', (e)=>{
+        if(e.key==='ArrowRight' || e.key==='ArrowDown'){
+          e.preventDefault();
+          const cur = navButtons.findIndex(b=>b.classList.contains('active'));
+          const next = Math.min(sections.length-1, Math.max(0, cur+1));
+          sections[next].scrollIntoView({behavior:'smooth',inline:'start'});
+        }
+        if(e.key==='ArrowLeft' || e.key==='ArrowUp'){
+          e.preventDefault();
+          const cur = navButtons.findIndex(b=>b.classList.contains('active'));
+          const prev = Math.min(sections.length-1, Math.max(0, cur-1));
+          sections[prev].scrollIntoView({behavior:'smooth',inline:'start'});
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
