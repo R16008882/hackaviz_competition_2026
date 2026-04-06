@@ -22,22 +22,27 @@
       --centre: #64748b;
     }
 
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      min-height: 100%;
+      overflow: hidden;
+    }
+
     * { box-sizing: border-box; }
 
     body {
-      margin: 0;
-      min-height: 100vh;
-      color: var(--text);
+      color: #1A1A2E;
       font-family: "Aptos", "Segoe UI", "Trebuchet MS", sans-serif;
-      background:
-        radial-gradient(circle at top left, rgba(217, 119, 6, 0.12), transparent 28%),
-        radial-gradient(circle at 88% 10%, rgba(225, 29, 72, 0.1), transparent 24%),
-        linear-gradient(145deg, #f8f2ea 0%, #f0ebe2 50%, #f8f7f4 100%);
+      background: #FAF8F4;
     }
 
     .page {
       width: min(1500px, calc(100vw - 28px));
-      margin: 18px auto 28px;
+      max-width: 100%;
+      margin: 14px auto;
+      min-height: 100%;
     }
 
     .hero {

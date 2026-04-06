@@ -19,22 +19,27 @@
       --focus: #17325a;
     }
 
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      min-height: 100%;
+      overflow: hidden;
+    }
+
     * { box-sizing: border-box; }
 
     body {
-      margin: 0;
-      min-height: 100vh;
-      color: var(--text);
+      color: #1A1A2E;
       font-family: "Aptos", "Segoe UI", "Trebuchet MS", sans-serif;
-      background:
-        radial-gradient(circle at top left, rgba(42, 99, 235, 0.12), transparent 28%),
-        radial-gradient(circle at 90% 10%, rgba(209, 115, 26, 0.12), transparent 24%),
-        linear-gradient(145deg, #edf4ff 0%, #f7f9fd 46%, #eef3f8 100%);
+      background: #FAF8F4;
     }
 
     .page {
       width: min(1240px, calc(100vw - 32px));
-      margin: 24px auto 32px;
+      max-width: 100%;
+      margin: 14px auto;
+      min-height: 100%;
     }
 
     .hero {
