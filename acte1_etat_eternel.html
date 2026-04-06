@@ -4,7 +4,6 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Acte 1 - Les fonctions eternelles de l'Etat</title>
-  <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
     :root {
       --bg-1: #f2efe7;
@@ -24,7 +23,7 @@
       margin: 0;
       padding: 0;
       height: 100%;
-      min-height: 100%;
+      width: 100%;
       overflow: hidden;
     }
 
@@ -37,258 +36,105 @@
     }
 
     .page {
-      width: min(1460px, calc(100vw - 16px));
-      max-width: 100%;
-      margin: 10px auto;
-      min-height: 100%;
-    }
-
-    .hero {
-      padding: 20px;
-      border-radius: 30px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(250, 246, 239, 0.92));
-      box-shadow: var(--shadow);
-      border: 1px solid rgba(64, 49, 33, 0.08);
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
     }
 
     .eyebrow {
-      margin: 0 0 10px;
+      margin: 0 0 6px;
       color: var(--accent);
       text-transform: uppercase;
       letter-spacing: 0.16em;
-      font-size: 0.82rem;
+      font-size: 0.65rem;
       font-weight: 800;
     }
 
     h1 {
       margin: 0;
       font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
-      font-size: clamp(2rem, 4vw, 3.6rem);
+      font-size: clamp(1.1rem, 2.5vw, 1.8rem);
       line-height: 1.02;
       letter-spacing: -0.03em;
     }
 
     .subtitle {
-      margin: 12px 0 0;
-      max-width: 84ch;
+      margin: 4px 0 0;
       color: var(--muted);
-      line-height: 1.6;
-      font-size: 1.02rem;
+      line-height: 1.3;
+      font-size: clamp(0.7rem, 1.2vw, 0.8rem);
     }
 
     .stage {
-      margin-top: 18px;
+      flex: 1;
+      min-height: 0;
       display: grid;
-      grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
-      gap: 18px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
       align-items: stretch;
+      margin-top: 8px;
     }
 
     .panel {
-      padding: 16px;
-      border-radius: 26px;
+      padding: 8px;
+      border-radius: 18px;
       background: var(--panel);
       box-shadow: var(--shadow);
       border: 1px solid rgba(64, 49, 33, 0.08);
     }
 
-    .chart-panel {
-      position: relative;
-      height: min(720px, calc(100vh - 200px));
-      overflow: hidden;
-      max-height: 78vh;
-    }
-    
-    .detail-panel {
+    .data-item {
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      justify-content: space-between;
+      gap: 8px;
     }
 
-    .detail-card {
-      padding: 18px;
-      border-radius: 22px;
-      background: linear-gradient(180deg, rgba(255, 251, 245, 0.96), rgba(255, 255, 255, 0.94));
-      border: 1px solid rgba(64, 49, 33, 0.08);
-    }
-
-    .detail-label {
-      margin: 0 0 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      font-size: 0.75rem;
-      color: var(--accent);
+    .data-code {
+      font-size: 0.65rem;
       font-weight: 800;
-    }
-
-    .detail-title {
-      margin: 0;
-      font-size: 1.8rem;
-      line-height: 1.05;
-      letter-spacing: -0.03em;
-      font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
-    }
-
-    .detail-text {
-      margin: 14px 0 0;
-      color: var(--muted);
-      line-height: 1.65;
-      font-size: 0.98rem;
-    }
-
-    .legend {
-      display: grid;
-      gap: 10px;
-    }
-
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      border-radius: 16px;
-      background: rgba(255, 255, 255, 0.72);
-      border: 1px solid rgba(64, 49, 33, 0.08);
-    }
-
-    .swatch {
-      width: 14px;
-      height: 14px;
-      border-radius: 999px;
-      flex: 0 0 auto;
-      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.58);
-    }
-
-    .legend-text {
-      display: grid;
-      gap: 2px;
-    }
-
-    .legend-text strong {
-      font-size: 0.96rem;
-    }
-
-    .legend-text span {
-      color: var(--muted);
-      font-size: 0.88rem;
-      line-height: 1.4;
-    }
-
-    .note {
-      margin: 0;
-      padding: 16px 18px;
-      border-radius: 18px;
-      background: linear-gradient(135deg, rgba(217, 119, 6, 0.12), rgba(225, 29, 72, 0.08));
-      border: 1px solid rgba(217, 119, 6, 0.16);
-      color: var(--text);
-      line-height: 1.6;
-      font-weight: 600;
-    }
-
-    svg {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-
-    .arc-path {
-      cursor: pointer;
-      filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.12));
-      transition: opacity 160ms ease, transform 160ms ease;
-    }
-
-    .arc-path.is-dimmed {
-      opacity: 0.28;
-    }
-
-    .arc-outline {
-      fill: none;
-      stroke: rgba(255, 255, 255, 0.8);
-      stroke-width: 2;
-      pointer-events: none;
-    }
-
-    .center-ring {
-      fill: rgba(255, 255, 255, 0.78);
-      stroke: rgba(64, 49, 33, 0.08);
-      stroke-width: 2;
-    }
-
-    .center-kicker {
-      font-size: 0.82rem;
       letter-spacing: 0.16em;
       text-transform: uppercase;
-      fill: var(--accent);
-      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 2px;
     }
 
-    .center-title {
-      font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
-      font-size: 22px;
-      fill: var(--text);
+    .data-historical {
+      margin: 0;
+      font-size: clamp(1rem, 1.5vw, 1.2rem);
       font-weight: 700;
+      line-height: 1.2;
     }
 
-    .center-subtitle {
-      fill: var(--muted);
-      font-size: 14px;
-    }
-
-    .arc-label {
-      font-size: 15px;
-      font-weight: 800;
-      letter-spacing: 0.02em;
-      fill: #fffdf8;
-      paint-order: stroke;
-      stroke: rgba(34, 24, 18, 0.2);
-      stroke-width: 3px;
-      stroke-linejoin: round;
-      pointer-events: none;
-    }
-
-    .arc-subline {
-      font-size: 12.5px;
-      font-weight: 700;
-      fill: rgba(255, 255, 255, 0.92);
-      pointer-events: none;
-    }
-
-    .connector {
-      stroke: rgba(90, 75, 61, 0.28);
-      stroke-width: 1.5;
-      fill: none;
-      pointer-events: none;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 14px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.8);
-      border: 1px solid rgba(64, 49, 33, 0.08);
+    .data-label {
+      margin: 0;
+      font-size: 0.85rem;
+      font-weight: 600;
       color: var(--muted);
-      font-size: 0.9rem;
-      font-weight: 700;
     }
 
-    .badge-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-      background: var(--accent);
-      box-shadow: 0 0 0 5px rgba(217, 119, 6, 0.12);
+    .data-connector {
+      margin: 0;
+      font-size: 0.75rem;
+      line-height: 1.5;
+      color: var(--text);
+      flex: 1;
+    }
+
+    .hero {
+      flex: 0 0 auto;
+      padding: 8px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 250, 242, 0.88));
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(64, 49, 33, 0.08);
     }
 
     @media (max-width: 1080px) {
       .stage {
         grid-template-columns: 1fr;
-      }
-
-      .chart-panel {
-        height: min(640px, calc(100vh - 220px));
       }
     }
 
@@ -302,14 +148,6 @@
       .panel {
         border-radius: 22px;
       }
-
-      .chart-panel {
-        height: min(580px, calc(100vh - 220px));
-      }
-
-      .detail-title {
-        font-size: 1.45rem;
-      }
     }
   </style>
 </head>
@@ -318,314 +156,46 @@
     <section class="hero">
       <p class="eyebrow">Acte 1</p>
       <h1>Les fonctions eternelles de l'Etat</h1>
-      <p class="subtitle">
-        Une roue radiale pour montrer que les grandes fonctions publiques ne naissent pas avec l'Etat moderne :
-        elles prolongent des institutions plus anciennes, simplement codifiees, centralisees et redistribuees dans un cadre contemporain.
-      </p>
     </section>
 
     <section class="stage">
-      <article class="panel chart-panel" aria-label="Roue radiale des fonctions de l'Etat">
-        <svg id="acte1-chart" viewBox="0 0 900 720" role="img" aria-labelledby="acte1-title acte1-desc">
-          <title id="acte1-title">Les fonctions eternelles de l'Etat</title>
-          <desc id="acte1-desc">Roue radiale a quatre arcs reliant les fonctions COFOG a leurs equivalents historiques.</desc>
-        </svg>
-      </article>
-
-      <aside class="panel detail-panel">
-        <div class="detail-card">
-          <p class="detail-label">Lecture historique</p>
-          <h2 class="detail-title">Quatre heritages du pouvoir public</h2>
-          <p class="detail-text">
-            L'Etat moderne n'a pas invente ces missions : il les a centralisees, financees et rendues comparables.
-            La roue relie quatre fonctions COFOG a leurs ancetres institutionnels.
-          </p>
-        </div>
-
-        <div class="legend" id="acte1-legend" aria-label="Legende des correspondances historiques"></div>
-
-        <p class="note">
-          "Ces fonctions existent depuis des siecles — l'Etat moderne les a codifiees, pas inventees."
+      <div class="panel data-item" style="border-left: 5px solid #b45309;">
+        <span class="data-code">GF01</span>
+        <h3 class="data-historical">Administration generale</h3>
+        <p class="data-connector">
+          <strong>Contexte contemporain</strong> : Cette fonction renvoie à la gestion centrale de l'État — rédiger les lois, comptabiliser les impôts, conserver les documents publics, et faire fonctionner l'appareil bureaucratique.<br><br>
+          <strong>Contexte médiéval</strong> : Elle correspond à la structure administrative du pouvoir royal, qui s'appuyait sur des scribes, notaires et trésoriers pour collecter et gérer les revenus, rédiger les actes et organiser la fiscalité.
         </p>
+      </div>
 
-        <div class="badge"><span class="badge-dot"></span> D3 pur, sans GSAP, fichier autonome</div>
-      </aside>
+      <div class="panel data-item" style="border-left: 5px solid #0f766e;">
+        <span class="data-code">GF03</span>
+        <h3 class="data-historical">Ordre public</h3>
+        <p class="data-connector">
+          <strong>Contexte contemporain</strong> : Cette fonction couvre la sécurité publique, la régulation des marchés, le contrôle des normes et le maintien de l'ordre dans l'espace urbain.<br><br>
+          <strong>Contexte médiéval</strong> : Elle correspond aux officiers chargés de surveiller les marchés, les poids et mesures, la circulation des biens et la paix urbaine, comme les prévôts, sergents et agents de justice.
+        </p>
+      </div>
+
+      <div class="panel data-item" style="border-left: 5px solid #2563eb;">
+        <span class="data-code">GF07</span>
+        <h3 class="data-historical">Sante publique</h3>
+        <p class="data-connector">
+          <strong>Contexte contemporain</strong> : Cette fonction désigne l'organisation des soins collectifs, l'hôpital public, la prévention et le financement durable du système de santé.<br><br>
+          <strong>Contexte médiéval</strong> : Elle renvoie aux hôtels-Dieu et aux établissements hospitaliers religieux, qui accueillaient les malades, les pauvres et les pèlerins dans une logique de charité institutionnalisée.
+        </p>
+      </div>
+
+      <div class="panel data-item" style="border-left: 5px solid #dc2626;">
+        <span class="data-code">GF10</span>
+        <h3 class="data-historical">Protection sociale</h3>
+        <p class="data-connector">
+          <strong>Contexte contemporain</strong> : Cette fonction correspond à la redistribution des ressources vers les personnes vulnérables par les prestations sociales, les assurances publiques et les mécanismes d'assistance.<br><br>
+          <strong>Contexte médiéval</strong> : Elle évoque les formes de secours fondées sur l'aumône, les dons pieux et les institutions de charité, qui jouaient un rôle de soutien aux pauvres, aux infirmes et aux indigents.
+        </p>
+      </div>
     </section>
   </main>
 
-  <script>
-    const data = [
-      {
-        code: "GF01",
-        label: "Administration generale",
-        historical: "Diwan / chancellerie",
-        connector: "Comptes, archives, fiscalite, appareil central.",
-        explanation: "L'administration generale prolonge les anciens diwan et chancelleries : ecrire, compter, lever l'impot et stabiliser le pouvoir central.",
-        color: "#b45309",
-        shadow: "rgba(180, 83, 9, 0.18)"
-      },
-      {
-        code: "GF03",
-        label: "Ordre public",
-        historical: "Hisba",
-        connector: "Marches, mesures, arbitrage, securite urbaine.",
-        explanation: "La hisba encadrait les echanges et l'ordre urbain; le COFOG GF03 en garde la logique institutionnelle.",
-        color: "#0f766e",
-        shadow: "rgba(15, 118, 110, 0.18)"
-      },
-      {
-        code: "GF07",
-        label: "Sante publique",
-        historical: "Bimaristan",
-        connector: "Soins, accueil des malades, waqf hospitalier.",
-        explanation: "Les bimaristans sont l'ancetre fonctionnel de l'hopital public : soin organise, finance et durable.",
-        color: "#2563eb",
-        shadow: "rgba(37, 99, 235, 0.18)"
-      },
-      {
-        code: "GF10",
-        label: "Protection sociale",
-        historical: "Bayt al-Mal",
-        connector: "Secours, redistribution, zakat.",
-        explanation: "Le bayt al-mal formalise la redistribution des ressources vers les vulnerables.",
-        color: "#dc2626",
-        shadow: "rgba(220, 38, 38, 0.18)"
-      }
-    ];
-
-    const svg = d3.select("#acte1-chart");
-    const width = 900;
-    const height = 720;
-    const centerX = width / 2;
-    const centerY = height / 2 + 8;
-    const innerRadius = 125;
-    const outerRadius = 245;
-    const labelRadius = 300;
-    const connectorRadius = 272;
-
-    const chart = svg.append("g")
-      .attr("transform", `translate(${centerX},${centerY})`);
-
-    const defs = svg.append("defs");
-
-    const glow = defs.append("filter")
-      .attr("id", "glow")
-      .attr("x", "-30%")
-      .attr("y", "-30%")
-      .attr("width", "160%")
-      .attr("height", "160%");
-
-    glow.append("feGaussianBlur")
-      .attr("stdDeviation", 7)
-      .attr("result", "blur");
-
-    glow.append("feColorMatrix")
-      .attr("in", "blur")
-      .attr("type", "matrix")
-      .attr("values", "1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.35 0")
-      .attr("result", "glowColor");
-
-    const merge = glow.append("feMerge");
-    merge.append("feMergeNode").attr("in", "glowColor");
-    merge.append("feMergeNode").attr("in", "SourceGraphic");
-
-    chart.append("circle")
-      .attr("r", 300)
-      .attr("fill", "rgba(255,255,255,0.16)")
-      .attr("stroke", "rgba(64,49,33,0.08)")
-      .attr("stroke-width", 1.5);
-
-    chart.append("circle")
-      .attr("r", 205)
-      .attr("fill", "rgba(255,255,255,0.32)")
-      .attr("stroke", "rgba(64,49,33,0.08)")
-      .attr("stroke-width", 1);
-
-    chart.append("circle")
-      .attr("class", "center-ring")
-      .attr("r", 118);
-
-    chart.append("text")
-      .attr("class", "center-kicker")
-      .attr("text-anchor", "middle")
-      .attr("y", -18)
-      .text("Memoires longues");
-
-    const centerTitle = chart.append("text")
-      .attr("class", "center-title")
-      .attr("text-anchor", "middle")
-      .attr("y", 12)
-      .text("Etat moderne");
-
-    const centerSubtitle = chart.append("text")
-      .attr("class", "center-subtitle")
-      .attr("text-anchor", "middle")
-      .attr("y", 38)
-      .text("Codifier ce qui existait deja");
-
-    const arc = d3.arc()
-      .innerRadius(innerRadius)
-      .outerRadius(outerRadius)
-      .cornerRadius(20);
-
-    const slices = data.map((d, i) => {
-      const startAngle = -Math.PI / 2 + (i * Math.PI / 2);
-      const endAngle = startAngle + Math.PI / 2 - 0.055;
-      return { ...d, startAngle, endAngle, index: i };
-    });
-
-    const segmentGroups = chart.append("g")
-      .selectAll("g.segment")
-      .data(slices)
-      .join("g")
-      .attr("class", "segment")
-      .attr("tabindex", 0)
-      .attr("role", "button")
-      .attr("aria-label", d => `${d.code}, ${d.historical}`);
-
-    segmentGroups.append("path")
-      .attr("class", "arc-path")
-      .attr("d", d => arc({ startAngle: d.startAngle, endAngle: d.startAngle + 0.01 }))
-      .attr("fill", d => d.color)
-      .attr("stroke", "rgba(255,255,255,0.78)")
-      .attr("stroke-width", 2)
-      .attr("filter", "url(#glow)")
-      .transition()
-      .duration(1100)
-      .delay((d, i) => i * 170)
-      .ease(d3.easeCubicOut)
-      .attrTween("d", function(d) {
-        const interpolate = d3.interpolate(d.startAngle, d.endAngle);
-        return function(t) {
-          return arc({
-            startAngle: d.startAngle,
-            endAngle: interpolate(t),
-            innerRadius,
-            outerRadius
-          });
-        };
-      });
-
-    segmentGroups.append("path")
-      .attr("class", "arc-outline")
-      .attr("d", d => arc({ startAngle: d.startAngle, endAngle: d.startAngle + 0.01, innerRadius, outerRadius }))
-      .transition()
-      .duration(1100)
-      .delay((d, i) => i * 170)
-      .ease(d3.easeCubicOut)
-      .attrTween("d", function(d) {
-        const interpolate = d3.interpolate(d.startAngle, d.endAngle);
-        return function(t) {
-          return arc({
-            startAngle: d.startAngle,
-            endAngle: interpolate(t),
-            innerRadius,
-            outerRadius
-          });
-        };
-      });
-
-    const labelLayer = chart.append("g").attr("class", "labels");
-
-    const labels = labelLayer.selectAll("g.label-group")
-      .data(slices)
-      .join("g")
-      .attr("class", "label-group")
-      .attr("transform", d => {
-        const mid = (d.startAngle + d.endAngle) / 2;
-        const angle = mid * 180 / Math.PI - 90;
-        const flip = angle > 90 || angle < -90;
-        const x = Math.cos(mid) * labelRadius;
-        const y = Math.sin(mid) * labelRadius;
-        return `translate(${x},${y}) rotate(${angle + (flip ? 180 : 0)})`;
-      })
-      .style("opacity", 0);
-
-    labels.append("line")
-      .attr("class", "connector")
-      .attr("x1", 0)
-      .attr("y1", 0)
-      .attr("x2", d => {
-        const mid = (d.startAngle + d.endAngle) / 2;
-        return Math.cos(mid) * (connectorRadius - labelRadius);
-      })
-      .attr("y2", d => {
-        const mid = (d.startAngle + d.endAngle) / 2;
-        return Math.sin(mid) * (connectorRadius - labelRadius);
-      });
-
-    labels.append("text")
-      .attr("class", "arc-label")
-      .attr("text-anchor", d => {
-        const angle = ((d.startAngle + d.endAngle) / 2) * 180 / Math.PI - 90;
-        return (angle > 90 || angle < -90) ? "end" : "start";
-      })
-      .attr("dy", -2)
-      .text(d => `${d.code} · ${d.historical}`);
-
-    labels.append("text")
-      .attr("class", "arc-subline")
-      .attr("text-anchor", d => {
-        const angle = ((d.startAngle + d.endAngle) / 2) * 180 / Math.PI - 90;
-        return (angle > 90 || angle < -90) ? "end" : "start";
-      })
-      .attr("dy", 17)
-      .text(d => d.label);
-
-    labels.transition()
-      .duration(700)
-      .delay((d, i) => 680 + i * 140)
-      .style("opacity", 1);
-
-    const legend = d3.select("#acte1-legend");
-    const legendItems = legend.selectAll("div.legend-item")
-      .data(slices)
-      .join("div")
-      .attr("class", "legend-item");
-
-    legendItems.append("span")
-      .attr("class", "swatch")
-      .style("background", d => d.color)
-      .style("box-shadow", d => `0 0 0 5px ${d.shadow}`);
-
-    const legendText = legendItems.append("div").attr("class", "legend-text");
-    legendText.append("strong").text(d => `${d.code} — ${d.historical}`);
-    legendText.append("span").text(d => d.connector);
-
-    const allSegments = chart.selectAll("path.arc-path");
-    const detailCard = d3.select(".detail-card");
-    const detailTitle = detailCard.select(".detail-title");
-    const detailBody = detailCard.select(".detail-text");
-
-    function setFocus(datum) {
-      centerTitle.text(datum.historical);
-      centerSubtitle.text(`${datum.code} · ${datum.label}`);
-      allSegments.classed("is-dimmed", d => d.code !== datum.code);
-      detailTitle.text(datum.historical);
-      detailBody.text(datum.explanation);
-    }
-
-    function clearFocus() {
-      allSegments.classed("is-dimmed", false);
-      centerTitle.text("Etat moderne");
-      centerSubtitle.text("Codifier ce qui existait deja");
-      detailTitle.text("Quatre heritages du pouvoir public");
-      detailBody.text("L'Etat moderne n'a pas invente ces missions : il les a centralisees, financees et rendues comparables. La roue relie quatre fonctions COFOG a leurs ancetres institutionnels.");
-    }
-
-    segmentGroups
-      .on("mouseenter", function(event, d) {
-        setFocus(d);
-      })
-      .on("focus", function(event, d) {
-        setFocus(d);
-      })
-      .on("mouseleave", function() {
-        clearFocus();
-      })
-      .on("blur", function() {
-        clearFocus();
-      });
-  </script>
 </body>
 </html>
